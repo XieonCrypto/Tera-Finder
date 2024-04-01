@@ -5,26 +5,28 @@ namespace TeraFinder.Core;
 
 public static class RewardUtil
 {
-    public static readonly string[] TeraShard = new string[] { "テラピ", "Tera Shard", "Téra-Éclat", "Teralite", "Tera-Stück", "Teralito", "테라피스", "晶碎块", "晶碎塊" };
-    public static readonly string[] Material = new string[] { "おとしもの", "Material", "Échantillons", "Materiali", "Materialentasche", "Materiales", "掉落物", "掉落物", "掉落物" };
-
-    public static Dictionary<ulong, List<Reward>>[] GetTeraRewardsTables()
+    public static List<Reward> GetCombinedRewardList(TeraDetails rng, List<Reward> fixedRewards, List<Reward> lotteryRewards, int boost = 0)
     {
-        var drops = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidFixedRewardItemArray>(Properties.Resources.raid_fixed_reward_item_array)!;
-        var lottery = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidLotteryRewardItemArray>(Properties.Resources.raid_lottery_reward_item_array)!;
-        var fixedTable = GetFixedTable(drops.Table);
-        var lotteryTable = GetLotteryTable(lottery.Table);
-        return new Dictionary<ulong, List<Reward>>[] { fixedTable, lotteryTable };
+        var lotteryrng = CalculateLotteryRNG(rng, lotteryRewards, boost);
+        var list = new List<Reward>();
+        list.AddRange(fixedRewards);
+        list.AddRange(lotteryrng);
+        return list;
     }
 
-    public static Dictionary<ulong, List<Reward>>[] GetDistRewardsTables(SAV9SV sav)
+    public static (Dictionary<ulong, List<Reward>> fixedRewardTable, Dictionary<ulong, List<Reward>> lotteryRewardTable) GetTeraRewardsTables()
     {
-        var rewards = EventUtil.GetEventItemDataFromSAV(sav);
-        var drops = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidFixedRewardItemArray>(rewards[0])!;
-        var lottery = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidLotteryRewardItemArray>(rewards[1])!;
-        var fixedTable = GetFixedTable(drops.Table);
-        var lotteryTable = GetLotteryTable(lottery.Table);
-        return new Dictionary<ulong, List<Reward>>[] { fixedTable, lotteryTable };
+        var drops = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidFixedRewardItemArray>(ResourcesUtil.GetFixedRewardsData())!;
+        var lottery = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidLotteryRewardItemArray>(ResourcesUtil.GetLotteryRewardsData())!;
+        return (GetFixedTable(drops.Table), GetLotteryTable(lottery.Table));
+    }
+
+    public static (Dictionary<ulong, List<Reward>> fixedDistRewardTable, Dictionary<ulong, List<Reward>> lotteryDistRewardTable) GetDistRewardsTables(SAV9SV sav)
+    {
+        var (distRewards, mightyRewards) = EventUtil.GetCurrentEventRewards(sav);
+        var drops = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidFixedRewardItemArray>(distRewards)!;
+        var lottery = JsonSerializer.Deserialize<pkNX.Structures.FlatBuffers.SV.DeliveryRaidLotteryRewardItemArray>(mightyRewards)!;
+        return (GetFixedTable(drops.Table), GetLotteryTable(lottery.Table));
     }
 
     public static bool IsTM(int item) => item switch
@@ -36,15 +38,48 @@ public static class RewardUtil
         _ => false,
     };
 
-    public static string GetNameTM(int item, ReadOnlySpan<string> items, ReadOnlySpan<string> moves, ReadOnlySpan<ushort> tm) => item switch
+    public static string GetNameTM(int item, ReadOnlySpan<string> items, ReadOnlySpan<string> moves)
     {
-        >= 328 and <= 419 => $"{items[item]} {moves[tm[001 + item - 328]]}", // TM001 to TM092, skip TM000 Mega Punch
-        618 or 619 or 620 => $"{items[item]} {moves[tm[093 + item - 618]]}", // TM093 to TM095
-        690 or 691 or 692 or 693 => $"{items[item]} {moves[tm[096 + item - 690]]}", // TM096 to TM099
-        _ => $"{items[item]} {moves[tm[100 + item - 2160]]}", // TM100 to TM229
+        var tm = pkNX.Structures.FlatBuffers.SV.PersonalDumperSV.TMIndexes;
+        return item switch
+        {
+            >= 328 and <= 419 => $"{items[item]} {moves[tm[001 + item - 328]]}", // TM001 to TM092, skip TM000 Mega Punch
+            618 or 619 or 620 => $"{items[item]} {moves[tm[093 + item - 618]]}", // TM093 to TM095
+            690 or 691 or 692 or 693 => $"{items[item]} {moves[tm[096 + item - 690]]}", // TM096 to TM099
+            _ => $"{items[item]} {moves[tm[100 + item - 2160]]}", // TM100 to TM229
+        };
+    }
+
+    public static void ReplaceMaterialReward(this List<Reward> rewards, Species species)
+    {
+        for (var i = 0; i < rewards.Count; i++)
+        {
+            switch (rewards[i].ItemID)
+            {
+                case ushort.MaxValue:
+                    rewards[i].ItemID = GetMaterial(species);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public static bool IsHerbaMystica(int item) => item switch
+    {
+        ushort.MaxValue - 2 => true,
+        >= 1904 and <= 1908 => true,
+        _ => false,
     };
 
-    private static int GetTeraShard(MoveType type)
+    public static bool IsTeraShard(int item) => item switch
+    {
+        ushort.MaxValue - 1 => true,
+        >= 1862 and <= 1879 => true,
+        _ => false,
+    };
+
+    public static int GetTeraShard(MoveType type)
     {
         return type switch
         {
@@ -66,7 +101,7 @@ public static class RewardUtil
             MoveType.Dragon => 1876,
             MoveType.Dark => 1877,
             MoveType.Fairy => 1879,
-            _ => ushort.MaxValue - 1,
+            _ => throw new NotImplementedException(nameof(type)),
         };
     }
 
@@ -303,101 +338,89 @@ public static class RewardUtil
             Species.Morpeko => 2477,
             Species.Poltchageist or Species.Sinistcha => 2478,
 
-            Species.GreatTusk or Species.ScreamTail or Species.BruteBonnet or Species.FlutterMane or Species.SlitherWing
-            or Species.RoaringMoon or Species.WalkingWake or Species.IronTreads or Species.IronBundle or Species.IronHands
-            or Species.IronJugulis or Species.IronMoth or Species.IronThorns or Species.IronValiant or Species.IronLeaves => 0,
+            Species.Oddish or Species.Gloom or Species.Vileplume or Species.Bellossom => 2484,
+            Species.Tentacool or Species.Tentacruel => 2485,
+            Species.Doduo or Species.Dodrio => 2486,
+            Species.Seel or Species.Dewgong => 2487,
+            Species.Exeggcute or Species.Exeggutor => 2488,
+            Species.Tyrogue or Species.Hitmonlee or Species.Hitmonchan or Species.Hitmontop => 2489,
+            Species.Rhyhorn or Species.Rhydon or Species.Rhyperior => 2490,
+            Species.Horsea or Species.Seadra or Species.Kingdra => 2491,
+            Species.Elekid or Species.Electabuzz or Species.Electivire => 2492,
+            Species.Magby or Species.Magmar or Species.Magmortar => 2493,
+            Species.Lapras => 2494,
+            Species.Porygon or Species.Porygon2 or Species.PorygonZ => 2495,
+            Species.Chinchou or Species.Lanturn => 2496,
+            Species.Snubbull or Species.Granbull => 2497,
+            Species.Skarmory => 2498,
+            Species.Smeargle => 2499,
+            Species.Plusle => 2500,
+            Species.Minun => 2501,
+            Species.Trapinch or Species.Vibrava or Species.Flygon => 2502,
+            Species.Beldum or Species.Metang or Species.Metagross => 2503,
+            Species.Cranidos or Species.Rampardos => 2504,
+            Species.Shieldon or Species.Bastiodon => 2505,
+            Species.Blitzle or Species.Zebstrika => 2506,
+            Species.Drilbur or Species.Excadrill => 2507,
+            Species.Cottonee or Species.Whimsicott => 2508,
+            Species.Scraggy or Species.Scrafty => 2509,
+            Species.Minccino or Species.Cinccino => 2510,
+            Species.Solosis or Species.Duosion or Species.Reuniclus => 2511,
+            Species.Joltik or Species.Galvantula => 2512,
+            Species.Golett or Species.Golurk => 2513,
+            Species.Espurr or Species.Meowstic => 2514,
+            Species.Inkay or Species.Malamar => 2515,
+            Species.Pikipek or Species.Trumbeak or Species.Toucannon => 2516,
+            Species.Dewpider or Species.Araquanid => 2517,
+            Species.Comfey => 2518,
+            Species.Minior => 2519,
+            Species.Milcery => 2520,
+            Species.Duraludon or Species.Archaludon => 2521,
 
-            _ => ushort.MaxValue,
+            Species.GreatTusk or Species.ScreamTail or Species.BruteBonnet or Species.FlutterMane or Species.SlitherWing
+            or Species.RoaringMoon or Species.WalkingWake or Species.GougingFire or Species.RagingBolt => 0,
+
+            Species.IronTreads or Species.IronBundle or Species.IronHands or Species.IronJugulis or Species.IronMoth 
+            or Species.IronThorns or Species.IronValiant or Species.IronLeaves or Species.IronBoulder or Species.IronCrown => 0,
+
+            _ => 0,
         };
     }
-
 
     //Slightly modified from https://github.com/LegoFigure11/RaidCrawler/blob/06a7f4c17fca74297d6199f37a171f2b480d40f0/Structures/RaidRewards.cs#L10
     //GPL v3 License
     //Thanks LegoFigure11 & Architdate!
-    public static List<Reward> GetRewardList(TeraDetails pkm, ulong fixedhash, ulong lotteryhash, Dictionary<ulong, List<Reward>>? fixedic = null, Dictionary<ulong, List<Reward>>? lotterydic = null, int boost = 0)
+    private static List<Reward> CalculateLotteryRNG(TeraDetails rng, List<Reward> lotterylist, int boost = 0)
     {
         var rewardlist = new List<Reward>();
-        var fixedlist = new List<Reward>();
-        var lotterylist = new List<Reward>();
-
-        var fixedexists = fixedic is not null && fixedic.TryGetValue(fixedhash, out fixedlist);
-        var lotteryexists = lotterydic is not null && lotterydic.TryGetValue(lotteryhash, out lotterylist);
-
-        if (fixedexists)
+        var xoro = new Xoroshiro128Plus(rng.Seed);
+        var amount = GetRewardCount(xoro.NextInt(100), rng.Stars) + boost;
+        for (var i = 0; i < amount; i++)
         {
-            foreach (var reward in fixedlist!)
+            var treshold = (int)xoro.NextInt((ulong)lotterylist[0].Aux);
+            foreach (var reward in lotterylist)
             {
-                rewardlist.Add(reward.ItemID == ushort.MaxValue ? new Reward { ItemID = GetMaterial((Species)pkm.Species), Amount = reward.Amount, Aux = reward.Aux } :
-                    reward.ItemID == ushort.MaxValue - 1 ? new Reward { ItemID = GetTeraShard((MoveType)pkm.TeraType), Amount = reward.Amount, Aux = reward.Aux } : reward);
-            }
-        }
-        if (lotteryexists)
-        {
-            var xoro = new Xoroshiro128Plus(pkm.Seed);
-            var amount = GetRewardCount(xoro.NextInt(100), pkm.Stars) + boost;
-            for (var i = 0; i < amount; i++)
-            {
-                var treshold = (int)xoro.NextInt((ulong)lotterylist!.ElementAt(0).Aux);
-                foreach (var reward in lotterylist!)
+                if (reward.Probability > treshold)
                 {
-                    if (reward.Probability > treshold)
-                    {
-                        rewardlist.Add(reward.ItemID == ushort.MaxValue ? new Reward { ItemID = GetMaterial((Species)pkm.Species), Amount = reward.Amount } :
-                            reward.ItemID == ushort.MaxValue - 1 ? new Reward { ItemID = GetTeraShard((MoveType)pkm.TeraType), Amount = reward.Amount } : reward);
-                        break;
-                    }
-                    treshold -= reward.Probability;
+                    rewardlist.Add(reward);
+                    break;
                 }
-            }
-        }
-        return rewardlist;
-    }
-
-    public static List<Reward> GetRewardList(uint seed, ushort species, int stars, ulong fixedhash, ulong lotteryhash, Dictionary<ulong, List<Reward>>? fixedic = null, Dictionary<ulong, List<Reward>>? lotterydic = null, int boost = 0)
-    {
-        var rewardlist = new List<Reward>();
-        var fixedlist = new List<Reward>();
-        var lotterylist = new List<Reward>();
-
-        var fixedexists = fixedic is not null && fixedic.TryGetValue(fixedhash, out fixedlist);
-        var lotteryexists = lotterydic is not null && lotterydic.TryGetValue(lotteryhash, out lotterylist);
-
-        if (fixedexists)
-            foreach (var reward in fixedlist!)
-                rewardlist.Add(reward.ItemID == ushort.MaxValue ? new Reward { ItemID = GetMaterial((Species)species), Amount = reward.Amount, Aux = reward.Aux } : reward);
-
-        if (lotteryexists)
-        {
-            var xoro = new Xoroshiro128Plus(seed);
-            var amount = GetRewardCount(xoro.NextInt(100), stars) + boost;
-            for (var i = 0; i < amount; i++)
-            {
-                var tres = (int)xoro.NextInt((ulong)lotterylist!.ElementAt(0).Aux);
-                foreach (var reward in lotterylist!)
-                {
-                    if (reward.Probability > tres)
-                    {
-                        rewardlist.Add(reward.ItemID == ushort.MaxValue ? new Reward { ItemID = GetMaterial((Species)species), Amount = reward.Amount } : reward);
-                        break;
-                    }
-                    tres -= reward.Probability;
-                }
+                treshold -= reward.Probability;
             }
         }
         return rewardlist;
     }
 
     private static readonly int[][] RewardSlots =
-{
-        new [] { 4, 5, 6, 7, 8 },
-        new [] { 4, 5, 6, 7, 8 },
-        new [] { 5, 6, 7, 8, 9 },
-        new [] { 5, 6, 7, 8, 9 },
-        new [] { 6, 7, 8, 9, 10 },
-        new [] { 7, 8, 9, 10, 11 },
-        new [] { 7, 8, 9, 10, 11 },
-    };
+    [
+        [4, 5, 6, 7, 8],
+        [4, 5, 6, 7, 8],
+        [5, 6, 7, 8, 9],
+        [5, 6, 7, 8, 9],
+        [6, 7, 8, 9, 10],
+        [7, 8, 9, 10, 11],
+        [7, 8, 9, 10, 11],
+    ];
 
     private static int GetRewardCount(ulong random, int stars)
     {

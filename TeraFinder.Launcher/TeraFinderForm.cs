@@ -11,7 +11,7 @@ namespace TeraFinder.Launcher
         private string GameVersionSL = "Scarlet";
         private string GameVersionVL = "Violet";
         private string TrainerBlank = "TeraFinder";
-        private string NewsEvent = "Poké Portal News Event: ";
+        private string NewsEvent = "Poké Portal News Event: [Raid: {0}, Outbreak: {1}]";
         private string None = "None";
         private string SAVInvalid = "Not a valid save file.";
 
@@ -102,13 +102,9 @@ namespace TeraFinder.Launcher
 
         private void UpdateEventLabel()
         {
-            var str = NewsEvent;
-            var id = Plugin.GetEventIdentifier();
-            if (id > 0)
-                str += $"[{id}]";
-            else
-                str += None;
-            lblEvent.Text = str;
+            var raidId = Plugin.GetRaidEventIdentifier();
+            var outbreakId = Plugin.GetOutbreakEventIdentifier();
+            lblEvent.Text = string.Format(NewsEvent, raidId > 0 ? raidId : None, outbreakId > 0 ? outbreakId : None); ;
         }
 
         private void btnLoad_Click(object sender, EventArgs e)
@@ -206,9 +202,9 @@ namespace TeraFinder.Launcher
             Plugin.LaunchCalculator();
         }
 
-        private void btnStartFinder_Click(object sender, EventArgs e)
+        private void btnStartSeedChecker_Click(object sender, EventArgs e)
         {
-            Plugin.LaunchFinder();
+            Plugin.LaunchSeedChecker();
         }
 
         private void btnStartRewardCalc_Click(object sender, EventArgs e)
@@ -257,6 +253,18 @@ namespace TeraFinder.Launcher
                 this.Text += TeraPlugin.Version;
                 this.ResumeLayout();
             }
+        }
+
+        private void ImportNullRaid_Click(object sender, EventArgs e)
+        {
+            Plugin.LaunchRaidNullImporter();
+            UpdateEventLabel();
+        }
+
+        private void ImportNullOutbreak_Click(object sender, EventArgs e)
+        {
+            Plugin.LaunchOutbreakNullImporter();
+            UpdateEventLabel();
         }
     }
 }
