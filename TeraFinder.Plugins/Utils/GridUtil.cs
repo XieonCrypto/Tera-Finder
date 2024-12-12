@@ -117,7 +117,7 @@ public static class GridUtil
 
                             for (var i = 0; i < count; i++)
                                 for (var j = 0; j < columnCount; j++)
-                                    if (count > 1 && Convert.ToUInt32((string)selectedRows.ElementAt(0).Cells[columnCount - 1].Value, 10) > Convert.ToUInt32((string)selectedRows.ElementAt(1).Cells[columnCount - 1].Value, 10))
+                                    if (count > 1 && Convert.ToUInt32((string)selectedRows.ElementAt(0).Cells[columnCount - 1].Value!, 10) > Convert.ToUInt32((string)selectedRows.ElementAt(1).Cells[columnCount - 1].Value!, 10))
                                         outputTxt[i + 1] += Convert.ToString(selectedRows.ElementAt(count - (i + 1)).Cells[j].Value) + "\t";
                                     else
                                         outputTxt[i + 1] += Convert.ToString(selectedRows.ElementAt(i).Cells[j].Value) + "\t";
@@ -163,6 +163,8 @@ public static class GridUtil
                     var encounters = f.Editor.GetCurrentEncounters(content, map);
                     if (EncounterRaidTF9.TryGenerateTeraDetails(seed, encounters, version, progress, eventProgress, content, map, id32, groupid, out var enc, out var result))
                     {
+                        var checkActiveHandler = ParseSettings.Settings.Handler.CheckActiveHandler;
+                        ParseSettings.Settings.Handler.CheckActiveHandler = false;
                         if (!enc.GeneratePK9(result.Value, id32, version, f.Editor.SAV.OT, f.Editor.SAV.Language, f.Editor.SAV.Gender, out var pk9, out var la))
                         {
                             var la_encounter = la.Results.Where(l => l.Identifier is CheckIdentifier.Encounter).FirstOrDefault();
@@ -170,6 +172,7 @@ public static class GridUtil
                                 MessageBox.Show($"{strings["GridUtil.ErrorParsing"]}\n{strings["GridUtil.MissingData"]} [{enc.Identifier}].\n{strings["GridUtil.CheckWiki"]}");
                             else
                                 MessageBox.Show($"{strings["GridUtil.ErrorParsing"]} {strings["GridUtil.Report"]}\n{la.Report()}");
+                            ParseSettings.Settings.Handler.CheckActiveHandler = checkActiveHandler;
                             return;
                         }
 
@@ -195,6 +198,8 @@ public static class GridUtil
                             File.WriteAllBytes(sfd.FileName, pk9.Data);
                             MessageBox.Show($"{strings["GridUtil.Exported"]} {sfd.FileName}");
                         }
+
+                        ParseSettings.Settings.Handler.CheckActiveHandler = checkActiveHandler;
                     }
                 }
                 catch (Exception ex)
@@ -373,6 +378,9 @@ public static class GridUtil
                     var id32 = TidUtil.GetID32(Convert.ToUInt32(f.txtTID.Text, 10), Convert.ToUInt32(f.txtSID.Text, 10));
 
                     var encounters = f.Editor.GetCurrentEncounters(content, map);
+                    var checkActiveHandler = ParseSettings.Settings.Handler.CheckActiveHandler;
+                    ParseSettings.Settings.Handler.CheckActiveHandler = false;
+
                     if (EncounterRaidTF9.TryGenerateTeraDetails(seed, encounters, version, progress, eventProgress, content, map, id32, groupid, out var enc, out var result))
                     {
                         if (!enc.GeneratePK9(result.Value, id32, version, f.Editor.SAV.OT, f.Editor.SAV.Language, f.Editor.SAV.Gender, out var pk9, out var la))
@@ -382,9 +390,12 @@ public static class GridUtil
                                 MessageBox.Show($"{strings["GridUtil.ErrorParsing"]}\n{strings["GridUtil.MissingData"]} [{enc.Identifier}].\n{strings["GridUtil.CheckWiki"]}");
                             else
                                 MessageBox.Show($"{strings["GridUtil.ErrorParsing"]} {strings["GridUtil.Report"]}\n{la.Report()}");
+
+                            ParseSettings.Settings.Handler.CheckActiveHandler = checkActiveHandler;
                             return;
                         }
 
+                        ParseSettings.Settings.Handler.CheckActiveHandler = checkActiveHandler;
                         f.Editor.PKMEditor!.PopulateFields(pk9!, true);
                     }
                 }
