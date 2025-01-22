@@ -1,9 +1,4 @@
-# Tera Finder
-![immagine](https://github.com/Manu098vm/Tera-Finder/assets/52102823/15f9d8c3-423c-4bfc-89c4-fb1495445c9e)
-
-This is a PKHeX.Core based program that allows to view, edit and calculate Raids and Mass Outbreaks for Scarlet & Violet. This is the spiritual sequel of [SVXoroCalc](https://github.com/Manu098vm/SVResearches).
-Both a standalone program and a PKHeX plugin are available for use.
-
+ 
 ## Features:
 * [Connection to Remote Device](https://github.com/Manu098vm/Tera-Finder/wiki/Connect-To-Remote-Device)
 * [View & Edit Mass Outbreaks](https://github.com/Manu098vm/Tera-Finder/wiki/Mass-Outbreak-Viewer-&-Editor)
