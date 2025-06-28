@@ -18,6 +18,7 @@ Extract the entire contents of the zip to the same directory before launching th
 This is a PKHeX.Core based program that allows users to view, edit, and calculate Raids and Mass Outbreaks for Pokémon Scarlet & Violet. It is the spiritual successor to [SVXoroCalc](https://github.com/Manu098vm/SVResearches). 
 Both a standalone program and a PKHeX plugin are available.
 
+
 ## Features:
 * [Connect to a Remote Device](https://github.com/Manu098vm/Tera-Finder/wiki/Connect-To-Remote-Device)
 * [View & Edit Mass Outbreaks](https://github.com/Manu098vm/Tera-Finder/wiki/Mass-Outbreak-Viewer-&-Editor)
