@@ -145,7 +145,9 @@ public partial class CalculatorForm : Form
             { "AltEC", "EC % 100 = 0" },
             { "CalculatorForm.btnViewRewards", "View Rewards" },
             { "CalculatorForm.btnSaveAll", "Save All Results as TXT" },
+            { "CalculatorForm.btnSaveAllCsv", "Save All Results as CSV" },
             { "CalculatorForm.btnSave", "Save Selected Results as TXT" },
+            { "CalculatorForm.btnSaveCsv", "Save Selected Results as CSV" },
             { "CalculatorForm.btnSavePk9", "Save Selected Result as PK9" },
             { "CalculatorForm.btnToPkmEditor", "Send Selected Result to PKM Editor" },
             { "CalculatorForm.btnSendToEditor", "Send Selected Result to Raid Editor" },
@@ -191,7 +193,9 @@ public partial class CalculatorForm : Form
     {
         btnViewRewards.Text = Strings["CalculatorForm.btnViewRewards"];
         btnSaveAll.Text = Strings["CalculatorForm.btnSaveAll"];
+        btnSaveAllCsv.Text = Strings["CalculatorForm.btnSaveAllCsv"];
         btnSave.Text = Strings["CalculatorForm.btnSave"];
+        btnSaveCsv.Text = Strings["CalculatorForm.btnSaveCsv"];
         btnSavePk9.Text = Strings["CalculatorForm.btnSavePk9"];
         btnToPkmEditor.Text = Strings["CalculatorForm.btnToPkmEditor"];
         btnSendToEditor.Text = Strings["CalculatorForm.btnSendToEditor"];
@@ -215,18 +219,18 @@ public partial class CalculatorForm : Form
     {
         RaidContent.Standard => (TeraRaidMapParent)cmbMap.SelectedIndex switch
         {
-            TeraRaidMapParent.Kitakami => Editor.Kitakami,
-            TeraRaidMapParent.Blueberry => Editor.Blueberry,
-            _ => Editor.Paldea,
+            TeraRaidMapParent.Kitakami => Editor.RaidEncounters.Kitakami,
+            TeraRaidMapParent.Blueberry => Editor.RaidEncounters.Blueberry,
+            _ => Editor.RaidEncounters.Paldea,
         },
         RaidContent.Black => (TeraRaidMapParent)cmbMap.SelectedIndex switch
         {
-            TeraRaidMapParent.Kitakami => Editor.KitakamiBlack,
-            TeraRaidMapParent.Blueberry => Editor.BlueberryBlack,
-            _ => Editor.PaldeaBlack,
+            TeraRaidMapParent.Kitakami => Editor.RaidEncounters.KitakamiBlack,
+            TeraRaidMapParent.Blueberry => Editor.RaidEncounters.BlueberryBlack,
+            _ => Editor.RaidEncounters.PaldeaBlack,
         },
-        RaidContent.Event => Editor.Dist,
-        RaidContent.Event_Mighty => Editor.Mighty,
+        RaidContent.Event => Editor.RaidEncounters.Dist,
+        RaidContent.Event_Mighty => Editor.RaidEncounters.Mighty,
         _ => throw new NotImplementedException(nameof(cmbContent.SelectedIndex)),
     };
 
@@ -742,8 +746,10 @@ public partial class CalculatorForm : Form
     ];
 
     private void btnSaveAll_Click(object sender, EventArgs e) => dataGrid.SaveAllTxt(Editor.Language);
+    private void btnSaveAllCSV_Click(object sender, EventArgs e) => dataGrid.SaveAllTxt(Editor.Language, saveAsCsv: true);
 
     private void btnSave_Click(object sender, EventArgs e) => dataGrid.SaveSelectedTxt(Editor.Language);
+    private void btnSaveCSV_Click(object sender, EventArgs e) => dataGrid.SaveSelectedTxt(Editor.Language, saveAsCsv: true);
 
     private void btnToPkmEditor_Click(object sender, EventArgs e) => dataGrid.SendSelectedPk9Editor(this, Editor.Language, (TeraRaidMapParent)cmbMap.SelectedIndex);
 
