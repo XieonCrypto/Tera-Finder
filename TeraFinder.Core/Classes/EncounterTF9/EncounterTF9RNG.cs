@@ -210,50 +210,51 @@ public static class EncounterTF9RNG
         };
     }
 
-    private static uint GetAdaptedPID(ref Xoroshiro128Plus rand, EncounterRaidTF9 encounter, uint id32, out TeraShiny shiny)
-    {
-        var fakeTID = (uint)rand.NextInt();
-        var pid = (uint)rand.NextInt();
+private static uint GetAdaptedPID(ref Xoroshiro128Plus rand, EncounterRaidTF9 encounter, uint id32, out TeraShiny shiny)
+{
+    var fakeTID = (uint)rand.NextInt();
+    var pid = (uint)rand.NextInt();
 
-        if (encounter.Shiny is Shiny.Random)
+    if (encounter.Shiny is Shiny.Random)
+    {
+        var xor = ShinyUtil.GetShinyXor(pid, fakeTID);
+        if (xor < 16)
         {
-            var xor = ShinyUtil.GetShinyXor(pid, fakeTID);
-            if (xor < 16)
-            {
-                if (xor != 0) xor = 1;
-                ShinyUtil.ForceShinyState(true, ref pid, id32, xor);
-                shiny = xor == 0 ? TeraShiny.Square : TeraShiny.Star;
-            }
-            else
-            {
-                ShinyUtil.ForceShinyState(false, ref pid, id32, xor);
-                shiny = TeraShiny.No;
-            }
-        }
-        else if (encounter.Shiny is Shiny.Always)
-        {
-            var tid = (ushort)fakeTID;
-            var sid = (ushort)(fakeTID >> 16);
-            var xor = ShinyUtil.GetShinyXor(pid, fakeTID);
-            if (xor > 16)
-                pid = ShinyUtil.GetShinyPID(tid, sid, pid, 0);
-            if (!ShinyUtil.GetIsShiny6(id32, pid))
-            {
-                xor = ShinyUtil.GetShinyXor(pid, fakeTID);
-                pid = ShinyUtil.GetShinyPID(TidUtil.GetTID16(id32), TidUtil.GetSID16(id32), pid, xor == 0 ? 0u : 1u);
-            }
+if (xor != 0) xor = 1;
+ShinyUtil.ForceShinyState(true, ref pid, id32, xor);
+shiny = xor == 0 ? TeraShiny.Square : TeraShiny.Star;
             shiny = xor == 0 ? TeraShiny.Square : TeraShiny.Star;
         }
         else
         {
-            if (ShinyUtil.GetIsShiny6(fakeTID, pid))
-                pid ^= 0x1000_0000;
-            if (ShinyUtil.GetIsShiny6(id32, pid))
-                pid ^= 0x1000_0000;
+ShinyUtil.ForceShinyState(false, ref pid, id32, xor);
             shiny = TeraShiny.No;
         }
-        return pid;
     }
+    else if (encounter.Shiny is Shiny.Always)
+    {
+        var tid = (ushort)(fakeTID & 0xFFFF); // Extract TID
+        var sid = (ushort)(fakeTID >> 16);    // Extract SID
+        var xor = ShinyUtil.GetShinyXor(pid, fakeTID);
+        if (xor > 16)
+            pid = ShinyUtil.GetShinyPID(tid, sid, pid, 0);
+        if (!ShinyUtil.IsShiny(TidUtil.GetTID16(id32), TidUtil.GetSID16(id32), pid)) // Fixed line 240
+        {
+            xor = ShinyUtil.GetShinyXor(pid, fakeTID);
+            pid = ShinyUtil.GetShinyPID(TidUtil.GetTID16(id32), TidUtil.GetSID16(id32), pid, xor == 0 ? 0u : 1u);
+        }
+        shiny = xor == 0 ? TeraShiny.Square : TeraShiny.Star;
+    }
+    else
+    {
+        if (ShinyUtil.IsShiny(TidUtil.GetTID16(fakeTID), TidUtil.GetSID16(fakeTID), pid)) // Fixed line 251
+            pid ^= 0x1000_0000;
+        if (ShinyUtil.IsShiny(TidUtil.GetTID16(id32), TidUtil.GetSID16(id32), pid)) // Fixed line 249
+            pid ^= 0x1000_0000;
+        shiny = TeraShiny.No;
+    }
+    return pid;
+}
 
     private static int GetRefreshedAbility(PersonalInfo9SV info, int n)
     {
