@@ -1,0 +1,5 @@
+Source: encounter_gem_blueberry_black.pkl
+Total raid records decoded: 27
+
+6★ Raids
+Alcremie, Dugtrio-Alolan, Duraludon, Electivire, Excadrill, Exeggutor-Alolan, Flygon, Golem-Alolan, Golurk, Kingdra, Kleavor, Lapras, Magmortar, Malamar, Metagross, Muk-Alolan, Ninetales-Form-1 (Scarlet), Overqwil, Porygon-Z, Porygon2, Reuniclus, Rhyperior, Sandslash-Alolan (Violet), Skarmory, Slowbro-Form-2, Slowking-Form-1, Whimsicott
