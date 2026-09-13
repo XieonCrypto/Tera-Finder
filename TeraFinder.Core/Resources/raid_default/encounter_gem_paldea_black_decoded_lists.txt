@@ -1,5 +1,0 @@
-Source: encounter_gem_paldea_black.pkl
-Total raid records decoded: 70
-
-6★ Raids
-Amoonguss, Annihilape, Armarouge (Scarlet), Avalugg, Baxcalibur, Blissey, Bombirdier, Breloom, Ceruledge (Violet), Cetitan, Clawitzer (Violet), Clodsire, Corviknight, Cyclizar, Dachsbun, Ditto, Dondozo, Dragalge (Scarlet), Dragapult (Violet), Dragonite, Espeon, Farigiraf, Flareon, Frosmoth, Gallade, Garchomp, Gardevoir, Garganacl, Gengar, Glaceon, Glimmora, Goodra, Grafaiai, Gyarados, Haxorus, Heracross, Hippowdon, Hydreigon (Scarlet), Jolteon, Kilowattrel, Kingambit, Klawf, Leafeon, Lycanroc-Dusk, Mabosstiff, Magnezone, Maushold-Family of Three, Mimikyu, Orthworm, Pawmot, Pelipper, Pincurchin, Revavroom, Salamence (Violet), Scizor, Slowking, Staraptor, Sylveon, Talonflame, Tauros-Paldea Aqua (Violet), Tauros-Paldea Blaze (Scarlet), Tauros-Paldea Combat, Tinkaton, Toedscruel, Torkoal, Toxapex, Tyranitar (Scarlet), Umbreon, Vaporeon, Volcarona

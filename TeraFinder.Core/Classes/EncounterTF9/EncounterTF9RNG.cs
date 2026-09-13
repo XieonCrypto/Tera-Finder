@@ -238,7 +238,7 @@ ShinyUtil.ForceShinyState(false, ref pid, id32, xor);
         var xor = ShinyUtil.GetShinyXor(pid, fakeTID);
         if (xor > 16)
             pid = ShinyUtil.GetShinyPID(tid, sid, pid, 0);
-        if (!ShinyUtil.IsShiny(TidUtil.GetTID16(id32), TidUtil.GetSID16(id32), pid)) // Fixed line 240
+        if (!IsShiny(pid, id32))
         {
             xor = ShinyUtil.GetShinyXor(pid, fakeTID);
             pid = ShinyUtil.GetShinyPID(TidUtil.GetTID16(id32), TidUtil.GetSID16(id32), pid, xor == 0 ? 0u : 1u);
@@ -247,14 +247,19 @@ ShinyUtil.ForceShinyState(false, ref pid, id32, xor);
     }
     else
     {
-        if (ShinyUtil.IsShiny(TidUtil.GetTID16(fakeTID), TidUtil.GetSID16(fakeTID), pid)) // Fixed line 251
+        if (IsShiny(pid, fakeTID))
             pid ^= 0x1000_0000;
-        if (ShinyUtil.IsShiny(TidUtil.GetTID16(id32), TidUtil.GetSID16(id32), pid)) // Fixed line 249
+        if (IsShiny(pid, id32))
             pid ^= 0x1000_0000;
         shiny = TeraShiny.No;
     }
     return pid;
 }
+
+    private static bool IsShiny(uint pid, uint trainerId)
+    {
+        return ShinyUtil.GetShinyXor(pid, trainerId) < 16;
+    }
 
     private static int GetRefreshedAbility(PersonalInfo9SV info, int n)
     {

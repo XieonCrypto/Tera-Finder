@@ -1,5 +1,0 @@
-Source: encounter_gem_kitakami_black.pkl
-Total raid records decoded: 28
-
-6★ Raids
-Ambipom (Violet), Basculegion (Scarlet), Basculegion-Female (Violet), Chandelure, Clefable, Conkeldurr, Crawdaunt, Dusknoir, Gliscor (Scarlet), Golem, Kommo-o, Leavanny, Ludicolo, Mamoswine, Mandibuzz, Mienshao, Milotic, Morpeko (Violet), Ninetales, Politoed, Poliwrath, Quagsire, Shiftry, Sinistcha, Sinistcha-Form-1, Snorlax, Trevenant, Yanmega
